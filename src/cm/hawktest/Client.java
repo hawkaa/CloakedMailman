@@ -20,6 +20,7 @@ public class Client {
 	public static void main(String[] args) throws SocketTimeoutException, UnknownHostException, IOException {
 		Connection con = new CloakedConnection();
 		con.connect(InetAddress.getByName("localhost"), 4295);
+		System.out.println("Connected");
 		String input;
 		Scanner sc = new Scanner(System.in);
 		while (true) {

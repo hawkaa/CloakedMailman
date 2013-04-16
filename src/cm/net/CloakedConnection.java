@@ -44,15 +44,20 @@ public class CloakedConnection extends AbstractConnection {
      *            - the local port to associate with this connection
      */
     public CloakedConnection() {
-    	/*
-    	 * Setting state to closed
-    	 */
-    	this.state = State.CLOSED;
+    	// Generating random port number
+    	this((int)(10000 + (Math.random() * 10000)));
+    	
     }
     public CloakedConnection(int myPort) {
-    	this();
+    	// Setting state to closed
+    	this.state = State.CLOSED;
     	// Setting port
     	this.myPort = myPort;
+    	
+    	this.myAddress = getIPv4Address();
+    	
+    	
+    	System.out.println("Creating connection with port number " + this.myPort + ", ip " + this.myAddress + ", sequence number " + this.nextSequenceNo);
     }
 
     private String getIPv4Address() {
@@ -114,6 +119,8 @@ public class CloakedConnection extends AbstractConnection {
     	if (this.state != State.CLOSED){
     		throw new InvalidStateException("This call requires the connection to be CLOSED");
     	}
+    	
+    	// Set the state
     	this.state = State.LISTEN;
     	
     	while (true) {
@@ -130,6 +137,31 @@ public class CloakedConnection extends AbstractConnection {
     			continue;
     		}
     		System.out.println("Her");
+    		
+    		// Allright, we've received a SYN package.
+    		
+    		// Creating a new connection with random port number
+    		CloakedConnection con = new CloakedConnection();
+    		
+    		// Setting the connection state to SYN RCVD
+    		con.state = State.SYN_RCVD;
+    		
+    		// Setting connection parameters
+    		con.remoteAddress = dg.getSrc_addr();
+    		con.remotePort = dg.getSrc_port();
+    		
+    		// Send SYNACK to initiator
+    		con.sendAck(dg, true);
+    		
+    		// Awaiting ACK
+    		KtnDatagram ack = con.receiveAck();
+    		if(ack == null) {
+    			System.out.println("Connection ack timed out. Restarting.");
+    		}
+    		// Connection established
+    		con.state = State.ESTABLISHED;
+    		return con;
+    		
     	}
     	
     }
@@ -147,7 +179,15 @@ public class CloakedConnection extends AbstractConnection {
      * @see no.ntnu.fp.net.co.Connection#send(String)
      */
     public void send(String msg) throws ConnectException, IOException {
-        /*throw new NotImplementedException();*/
+        if(this.state != State.ESTABLISHED) {
+        	throw new ConnectException("Connection is not established");
+        }
+        KtnDatagram d = this.constructDataPacket(msg);
+        KtnDatagram ack = this.sendDataPacketWithRetransmit(d);
+        if (ack == null) {
+        	throw new IOException("Did not receive ACK on packet.");
+        }
+        
     }
 
     /**
