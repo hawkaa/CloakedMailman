@@ -13,6 +13,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Collections;
 
+import cm.util.Log;
+
 import no.ntnu.fp.net.cl.ClException;
 import no.ntnu.fp.net.cl.KtnDatagram;
 import no.ntnu.fp.net.cl.KtnDatagram.Flag;
@@ -36,6 +38,10 @@ public class CloakedConnection extends AbstractConnection {
 
     /** Keeps track of the used ports for each server port. */
     private static Map<Integer, Boolean> usedPorts = Collections.synchronizedMap(new HashMap<Integer, Boolean>());
+    
+    public static void d(String msg) {
+    	System.out.println(msg);
+    }
 
     /**
      * Initialise initial sequence number and setup state machine.
@@ -55,9 +61,7 @@ public class CloakedConnection extends AbstractConnection {
     	this.myPort = myPort;
     	
     	this.myAddress = getIPv4Address();
-    	
-    	
-    	System.out.println("Creating connection with port number " + this.myPort + ", ip " + this.myAddress + ", sequence number " + this.nextSequenceNo);
+    	d("Creating connection with port number " + this.myPort + ", ip " + this.myAddress + ", sequence number " + this.nextSequenceNo);
     }
 
     private String getIPv4Address() {
@@ -92,30 +96,41 @@ public class CloakedConnection extends AbstractConnection {
     	this.remoteAddress = remoteAddress.getHostAddress();
     	this.remotePort = remotePort;
     	
+    	Log.d("Connect", "Trying to connect to " + this.remoteAddress + ":" + this.remotePort);
+    	
     	// State må være CLOSED når connect() kalles.
     	if(this.state != State.CLOSED)
     	{
-				throw new InvalidStateException("This call requires the connection to be CLOSED");
+			throw new InvalidStateException("This call requires the connection to be CLOSED");
     	}
     	
     	// Sender SYN
     	KtnDatagram packet = constructInternalPacket(Flag.SYN);
+    	Log.d("Connect", "Sending SYN");
     	simplySendPacket(packet);
+    	Log.d("Connect", "Waiting for ACK");
     	KtnDatagram ackReceive = receiveAck();
     	this.state = State.SYN_SENT;
     	
     	// Får man ikke noe svar, har det oppstått en time out
     	if(ackReceive == null)
     	{
+    		Log.d("Connect", "ACK timed out");
     		throw new SocketTimeoutException("Socket timed out");
     	}
+    	Log.d("Connect", "ACK received");
     	// Mottar man SYN_ACK, er connect() oppnådd
-    	if(ackReceive.getFlag() == Flag.SYN_ACK)
+    	if(ackReceive.getFlag() != Flag.SYN_ACK)
     	{
-    		this.state = State.ESTABLISHED;
+    		Log.d("Connect", "ACK received, but it was not SYNACK.");
+    		throw new SocketTimeoutException("Socket timed out");
+    		
     	}
-    	KtnDatagram ackPacket = constructInternalPacket(Flag.ACK);
-    	simplySendPacket(ackPacket);
+    	this.state = State.ESTABLISHED;
+		KtnDatagram ackPacket = constructInternalPacket(Flag.ACK);
+		Log.d("Connect", "Sending ACK");
+		simplySendPacket(ackPacket);
+    	
     	
     	
     }
@@ -138,6 +153,8 @@ public class CloakedConnection extends AbstractConnection {
     	// Set the state
     	this.state = State.LISTEN;
     	
+    	Log.d("Accept", "Listening for connection on " + this.myAddress + ":" + this.myPort);
+    	
     	while (true) {
     		// Receive datagram
     		KtnDatagram dg = this.receivePacket(true);
@@ -151,9 +168,9 @@ public class CloakedConnection extends AbstractConnection {
     		if(dg.getFlag() != Flag.SYN) {
     			continue;
     		}
-    		System.out.println("Her");
     		
     		// Allright, we've received a SYN package.
+    		Log.d("Accept", "Received SYN package from " + dg.getSrc_addr() + ":" + dg.getSrc_port());
     		
     		// Creating a new connection with random port number
     		CloakedConnection con = new CloakedConnection();
@@ -171,7 +188,7 @@ public class CloakedConnection extends AbstractConnection {
     		// Awaiting ACK
     		KtnDatagram ack = con.receiveAck();
     		if(ack == null) {
-    			System.out.println("Connection ack timed out. Restarting.");
+    			d("Connection ack timed out. Restarting.");
     		}
     		// Connection established
     		con.state = State.ESTABLISHED;
@@ -209,13 +226,39 @@ public class CloakedConnection extends AbstractConnection {
      * Wait for incoming data.
      * 
      * @return The received data's payload as a String.
+     * @throws InvalidStateException 
      * @see Connection#receive()
      * @see AbstractConnection#receivePacket(boolean)
      * @see AbstractConnection#sendAck(KtnDatagram, boolean)
      */
-    public String receive() throws ConnectException, IOException {
-        /*throw new NotImplementedException();*/
-    	return "pokute";
+    public String receive() throws ConnectException, IOException, InvalidStateException {
+    	/*
+    	 * Its essential that the connection is in the correct state
+    	 */
+    	if (this.state != State.ESTABLISHED){
+    		throw new InvalidStateException("This call requires the connection to be ESTABLISHED");
+    	}
+    	
+    	while (true) {
+    		// Receive datagram
+    		KtnDatagram dg = this.receivePacket(true);
+    		
+    		// If datagram not set
+    		if (dg == null) {
+    			continue;
+    		}
+    		
+    		// Package received, yay!
+    		if(!this.isValid(dg)){
+    			// Package not valid, ignore it.
+    			continue;
+    		}
+    		
+    		// Package is valid, send ack on package
+    		this.sendAck(dg, false);
+    		return (String) dg.getPayload();
+    		
+    	}
     }
 
     /**

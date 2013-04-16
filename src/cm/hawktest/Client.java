@@ -1,5 +1,6 @@
 package cm.hawktest;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.SocketTimeoutException;
@@ -10,6 +11,7 @@ import no.ntnu.fp.net.cl.ClException;
 import no.ntnu.fp.net.co.Connection;
 import cm.net.CloakedConnection;
 import cm.net.InvalidStateException;
+import cm.util.Log;
 
 public class Client {
 
@@ -22,9 +24,10 @@ public class Client {
 	 * @throws InvalidStateException 
 	 */
 	public static void main(String[] args) throws SocketTimeoutException, UnknownHostException, IOException, InvalidStateException, ClException {
+		Log.setLogFile(new File("log/server_client.log"));
+		
 		Connection con = new CloakedConnection();
 		con.connect(InetAddress.getByName("localhost"), 4295);
-		System.out.println("Connected");
 		String input;
 		Scanner sc = new Scanner(System.in);
 		while (true) {

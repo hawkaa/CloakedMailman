@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import cm.net.InvalidStateException;
+
 import no.ntnu.fp.net.admin.Log;
 import no.ntnu.fp.net.co.Connection;
 
@@ -88,7 +90,9 @@ public class ReceiveMessageWorker extends Thread {
         }
         catch (IOException e) {
             // TODO: better handle exception
-        }
+        } catch (InvalidStateException e) {
+			e.printStackTrace();
+		}
     }
 
     /**

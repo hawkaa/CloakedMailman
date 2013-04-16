@@ -63,8 +63,9 @@ public interface Connection {
      *             if no remote instance is connected
      * @throws java.io.IOException
      *             if an I/O error occurs when sending
+     * @throws InvalidStateException 
      */
-    public String receive() throws java.net.ConnectException, java.io.IOException;
+    public String receive() throws java.net.ConnectException, java.io.IOException, InvalidStateException;
 
     /**
      * Closes this connection

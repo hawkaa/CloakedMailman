@@ -17,6 +17,8 @@ import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 
+import cm.net.InvalidStateException;
+
 import no.ntnu.fp.net.admin.Log;
 import no.ntnu.fp.net.admin.Settings;
 import no.ntnu.fp.net.co.Connection;
@@ -90,7 +92,9 @@ public class ChatServer extends JFrame {
 			broadcast(ChatServer.this.getUsers().toString());
 		    } catch (IOException e) {
 		      DBG("User.run(): Error: " + e.getMessage());
-                    }
+                    } catch (InvalidStateException e) {
+				e.printStackTrace();
+			}
                 }
             }
         }

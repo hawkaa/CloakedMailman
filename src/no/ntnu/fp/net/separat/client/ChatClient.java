@@ -10,8 +10,11 @@ import java.net.InetAddress;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 
+import cm.net.InvalidStateException;
+
 import no.ntnu.fp.net.admin.Log;
 import no.ntnu.fp.net.admin.Settings;
+import no.ntnu.fp.net.cl.ClException;
 import no.ntnu.fp.net.co.Connection;
 import no.ntnu.fp.net.co.ConnectionImpl;
 import no.ntnu.fp.net.co.SimpleConnection;
@@ -42,7 +45,7 @@ public class ChatClient {
 
     private static boolean SIMPLE_CONNECTION = true;
 
-    public ChatClient(String address, int port) {
+    public ChatClient(String address, int port) throws InvalidStateException, ClException {
         port_to_server = port;
         addressServer= address;
         if (SIMPLE_CONNECTION) {
@@ -71,7 +74,10 @@ public class ChatClient {
                     e.printStackTrace();
                 } catch (IOException e) {
                     e.printStackTrace();
-                }
+                } catch (InvalidStateException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
             }
         }
     }
@@ -80,7 +86,7 @@ public class ChatClient {
         send(this.username + ": " + message);
     }
 
-    public void login(String username) {
+    public void login(String username) throws InvalidStateException, ClException {
         String message;
         System.out.println("Logger inn " + username);
         try {
@@ -141,7 +147,7 @@ public class ChatClient {
 
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InvalidStateException, ClException {
         String address;
         int port;
         Log.setLogName("Klienten");
