@@ -39,9 +39,6 @@ public class CloakedConnection extends AbstractConnection {
     /** Keeps track of the used ports for each server port. */
     private static Map<Integer, Boolean> usedPorts = Collections.synchronizedMap(new HashMap<Integer, Boolean>());
     
-    public static void d(String msg) {
-    	System.out.println(msg);
-    }
 
     /**
      * Initialise initial sequence number and setup state machine.
@@ -61,7 +58,7 @@ public class CloakedConnection extends AbstractConnection {
     	this.myPort = myPort;
     	
     	this.myAddress = getIPv4Address();
-    	d("Creating connection with port number " + this.myPort + ", ip " + this.myAddress + ", sequence number " + this.nextSequenceNo);
+    	Log.d("Constructor", "Creating connection with port number " + this.myPort + ", ip " + this.myAddress + ", sequence number " + this.nextSequenceNo);
     }
 
     private String getIPv4Address() {
@@ -126,10 +123,16 @@ public class CloakedConnection extends AbstractConnection {
     		throw new SocketTimeoutException("Socket timed out");
     		
     	}
+    	// OK, set new data
+    	this.remoteAddress = ackReceive.getSrc_addr();
+    	this.remotePort = ackReceive.getSrc_port();
+    	
     	this.state = State.ESTABLISHED;
 		KtnDatagram ackPacket = constructInternalPacket(Flag.ACK);
 		Log.d("Connect", "Sending ACK");
 		simplySendPacket(ackPacket);
+		
+		Log.d("Connect", "Connection established.");
     	
     	
     	
@@ -183,15 +186,17 @@ public class CloakedConnection extends AbstractConnection {
     		con.remotePort = dg.getSrc_port();
     		
     		// Send SYNACK to initiator
+    		Log.d("Accept", "Sending SYNACK to initiator");
     		con.sendAck(dg, true);
     		
     		// Awaiting ACK
     		KtnDatagram ack = con.receiveAck();
     		if(ack == null) {
-    			d("Connection ack timed out. Restarting.");
+    			Log.d("Accept", "Connection ack timed out. Restarting.");
     		}
     		// Connection established
     		con.state = State.ESTABLISHED;
+    		Log.d("Accept", "Connection established, returning connection");
     		return con;
     		
     	}
@@ -214,11 +219,14 @@ public class CloakedConnection extends AbstractConnection {
         if(this.state != State.ESTABLISHED) {
         	throw new ConnectException("Connection is not established");
         }
+        Log.d("Send", "Trying to send: " + msg);
         KtnDatagram d = this.constructDataPacket(msg);
         KtnDatagram ack = this.sendDataPacketWithRetransmit(d);
         if (ack == null) {
+        	Log.d("Send", "Ack not received, packet timed out");
         	throw new IOException("Did not receive ACK on packet.");
         }
+    	Log.d("Send", "Ack received, packet sent successfully");
         
     }
 
@@ -239,6 +247,8 @@ public class CloakedConnection extends AbstractConnection {
     		throw new InvalidStateException("This call requires the connection to be ESTABLISHED");
     	}
     	
+    	Log.d("Receive", "Starting to wait for packet");
+    	
     	while (true) {
     		// Receive datagram
     		KtnDatagram dg = this.receivePacket(true);
@@ -248,12 +258,15 @@ public class CloakedConnection extends AbstractConnection {
     			continue;
     		}
     		
+    		
     		// Package received, yay!
     		if(!this.isValid(dg)){
+    			Log.d("Receive", "Package invalid, ignoring");
     			// Package not valid, ignore it.
     			continue;
     		}
     		
+    		Log.d("Receive", "Package is valid, returning payload \"" + (String)dg.getPayload() + "\" to callee. Sending ACK on package.");
     		// Package is valid, send ack on package
     		this.sendAck(dg, false);
     		return (String) dg.getPayload();

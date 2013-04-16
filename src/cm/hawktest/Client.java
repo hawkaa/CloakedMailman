@@ -28,13 +28,14 @@ public class Client {
 		
 		Connection con = new CloakedConnection();
 		con.connect(InetAddress.getByName("localhost"), 4295);
-		String input;
+		con.send("Petter er kul");
+		/*String input;
 		Scanner sc = new Scanner(System.in);
 		while (true) {
 			input = sc.next();
 			System.out.println("Sending: " + input);
 			con.send(input);
-		}
+		}*/
 
 	}
 

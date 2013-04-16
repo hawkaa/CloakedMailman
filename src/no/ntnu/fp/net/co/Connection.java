@@ -39,8 +39,9 @@ public interface Connection {
      * @throws java.net.SocketTimeoutException
      *             if the timeout has been reached
      * @throws InvalidStateException 
+     * @throws ClException 
      */
-    public Connection accept() throws java.io.IOException, java.net.SocketTimeoutException, InvalidStateException;
+    public Connection accept() throws java.io.IOException, java.net.SocketTimeoutException, InvalidStateException, ClException;
 
     /**
      * Send a message to a remote instance.

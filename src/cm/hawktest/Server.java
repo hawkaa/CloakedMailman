@@ -19,9 +19,7 @@ public class Server {
 		Log.setLogFile(new File("log/server_client.log"));
 		Connection server = new CloakedConnection(4295);
 		Connection c = server.accept();
-		while(true) {
-			Log.d("Server", "Received: " + c.receive());
-		}
+		System.out.println(c.receive());
 
 	}
 
