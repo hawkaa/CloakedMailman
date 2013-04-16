@@ -2,6 +2,8 @@ package no.ntnu.fp.net.co;
 
 import java.net.InetAddress;
 
+import cm.net.InvalidStateException;
+
 /**
  * Interface that defines the methods a Connection implementation must support.
  * 
@@ -32,8 +34,9 @@ public interface Connection {
      *             if an I/O error occurs when waiting for a connection
      * @throws java.net.SocketTimeoutException
      *             if the timeout has been reached
+     * @throws InvalidStateException 
      */
-    public Connection accept() throws java.io.IOException, java.net.SocketTimeoutException;
+    public Connection accept() throws java.io.IOException, java.net.SocketTimeoutException, InvalidStateException;
 
     /**
      * Send a message to a remote instance.

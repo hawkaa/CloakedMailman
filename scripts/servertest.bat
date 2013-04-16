@@ -1,0 +1,1 @@
+"C:\Program Files\Java\jdk1.7.0_10\bin\javac.exe" -g "D:\ktn2\src\cm\hawktest\Server.java"

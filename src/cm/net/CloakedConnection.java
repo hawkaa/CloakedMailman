@@ -41,10 +41,15 @@ public class CloakedConnection extends AbstractConnection {
      *            - the local port to associate with this connection
      */
     public CloakedConnection() {
-    	
+    	/*
+    	 * Setting state to closed
+    	 */
+    	this.state = State.CLOSED;
     }
     public CloakedConnection(int myPort) {
-        /*throw new NotImplementedException();*/
+    	this();
+    	// Setting port
+    	this.myPort = myPort;
     }
 
     private String getIPv4Address() {
@@ -78,9 +83,19 @@ public class CloakedConnection extends AbstractConnection {
      * Listen for, and accept, incoming connections.
      * 
      * @return A new ConnectionImpl-object representing the new connection.
+     * @throws InvalidStateException 
      * @see Connection#accept()
      */
-    public Connection accept() throws IOException, SocketTimeoutException {
+    public Connection accept() throws IOException, SocketTimeoutException, InvalidStateException {
+    	/*
+    	 * Its essential that the connection is in the correct states
+    	 */
+    	if (this.state != State.CLOSED){
+    		throw new InvalidStateException("This call requires the connection to be CLOSED");
+    	}
+    	
+    	
+    	
         /*throw new NotImplementedException();*/
     	return null;
     }

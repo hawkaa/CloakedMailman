@@ -80,7 +80,7 @@ public abstract class AbstractConnection implements Connection {
     /** Local and remote ip-address. */
     protected String myAddress, remoteAddress;
     /** Local and remote port number. */
-    protected int myPort, remotePort;
+    protected int myPort, remotePort = -1;
     /** Reference to the last packet received. */
     protected KtnDatagram lastValidPacketReceived;
     /** Reference to the last data packet sent. */
