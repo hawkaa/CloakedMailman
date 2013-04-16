@@ -9,7 +9,10 @@ import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import cm.net.InvalidStateException;
+
 import no.ntnu.fp.net.admin.Log;
+import no.ntnu.fp.net.cl.ClException;
 import no.ntnu.fp.net.co.Connection;
 
 /**
@@ -27,8 +30,10 @@ public class TestCoClient {
 
   /**
    * Program Entry Point.
+ * @throws ClException 
+ * @throws InvalidStateException 
    */
-  public static void main (String args[]){
+  public static void main (String args[]) throws InvalidStateException, ClException{
 
     // Set up log
     Log log = new Log();

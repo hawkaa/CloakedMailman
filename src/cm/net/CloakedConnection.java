@@ -87,20 +87,34 @@ public class CloakedConnection extends AbstractConnection {
     public void connect(InetAddress remoteAddress, int remotePort) throws IOException,
             SocketTimeoutException, InvalidStateException, ClException {
         /*throw new NotImplementedException();*/
+    	
+    	// Setter adresse og port
+    	this.remoteAddress = remoteAddress.getHostAddress();
+    	this.remotePort = remotePort;
+    	
+    	// State må være CLOSED når connect() kalles.
     	if(this.state != State.CLOSED)
     	{
 				throw new InvalidStateException("This call requires the connection to be CLOSED");
     	}
-    	this.state = State.ESTABLISHED;
+    	
+    	// Sender SYN
     	KtnDatagram packet = constructInternalPacket(Flag.SYN);
     	KtnDatagram ackReceive = sendDataPacketWithRetransmit(packet);
+    	this.state = State.SYN_SENT;
+    	
+    	// Får man ikke noe svar, har det oppstått en time out
     	if(ackReceive == null)
     	{
     		throw new SocketTimeoutException("Socket timed out");
     	}
+    	// Mottar man SYN_ACK, er connect() oppnådd
+    	if(ackReceive.getFlag() == Flag.SYN_ACK)
+    	{
+    		this.state = State.ESTABLISHED;
+    	}
     	KtnDatagram ackPacket = constructInternalPacket(Flag.ACK);
     	simplySendPacket(ackPacket);
-    	this.state = State.ESTABLISHED;
     	
     	
     }
