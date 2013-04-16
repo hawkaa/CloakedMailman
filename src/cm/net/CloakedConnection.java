@@ -56,7 +56,7 @@ public class CloakedConnection extends AbstractConnection {
     	this.myAddress = getIPv4Address();
     	
     	
-    	System.out.println("Creating connection with port number " + this.myPort + " and sequence number " + this.nextSequenceNo);
+    	System.out.println("Creating connection with port number " + this.myPort + ", ip " + this.myAddress + ", sequence number " + this.nextSequenceNo);
     }
 
     private String getIPv4Address() {
@@ -160,7 +160,15 @@ public class CloakedConnection extends AbstractConnection {
      * @see no.ntnu.fp.net.co.Connection#send(String)
      */
     public void send(String msg) throws ConnectException, IOException {
-        /*throw new NotImplementedException();*/
+        if(this.state != State.ESTABLISHED) {
+        	throw new ConnectException("Connection is not established");
+        }
+        KtnDatagram d = this.constructDataPacket(msg);
+        KtnDatagram ack = this.sendDataPacketWithRetransmit(d);
+        if (ack == null) {
+        	throw new IOException("Did not receive ACK on packet.");
+        }
+        
     }
 
     /**
