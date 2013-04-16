@@ -95,6 +95,8 @@ public class CloakedConnection extends AbstractConnection {
     	if (this.state != State.CLOSED){
     		throw new InvalidStateException("This call requires the connection to be CLOSED");
     	}
+    	this.state = State.LISTEN;
+    	
     	while (true) {
     		// Receive datagram
     		KtnDatagram dg = this.receivePacket(true);
