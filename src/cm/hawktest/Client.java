@@ -6,8 +6,10 @@ import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.Scanner;
 
+import no.ntnu.fp.net.cl.ClException;
 import no.ntnu.fp.net.co.Connection;
 import cm.net.CloakedConnection;
+import cm.net.InvalidStateException;
 
 public class Client {
 
@@ -16,8 +18,10 @@ public class Client {
 	 * @throws IOException 
 	 * @throws UnknownHostException 
 	 * @throws SocketTimeoutException 
+	 * @throws ClException 
+	 * @throws InvalidStateException 
 	 */
-	public static void main(String[] args) throws SocketTimeoutException, UnknownHostException, IOException {
+	public static void main(String[] args) throws SocketTimeoutException, UnknownHostException, IOException, InvalidStateException, ClException {
 		Connection con = new CloakedConnection();
 		con.connect(InetAddress.getByName("localhost"), 4295);
 		System.out.println("Connected");

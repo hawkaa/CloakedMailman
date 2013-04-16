@@ -91,7 +91,7 @@ public class CloakedConnection extends AbstractConnection {
     	{
 				throw new InvalidStateException("This call requires the connection to be CLOSED");
     	}
-    	this.state = State.SYN_SENT;
+    	this.state = State.ESTABLISHED;
     	KtnDatagram packet = constructInternalPacket(Flag.SYN);
     	KtnDatagram ackReceive = sendDataPacketWithRetransmit(packet);
     	if(ackReceive == null)
