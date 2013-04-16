@@ -2,6 +2,8 @@ package no.ntnu.fp.net.co;
 
 import java.net.InetAddress;
 
+import no.ntnu.fp.net.cl.ClException;
+
 import cm.net.InvalidStateException;
 
 /**
@@ -23,9 +25,11 @@ public interface Connection {
      *             if an I/O error occurs during the connection
      * @throws java.net.SocketTimeoutException
      *             if timeout expires before connection is completed.
+     * @throws InvalidStateException 
+     * @throws ClException 
      */
     public void connect(InetAddress remoteAddress, int port) throws java.io.IOException,
-            java.net.SocketTimeoutException;
+            java.net.SocketTimeoutException, InvalidStateException, ClException;
 
     /**
      * Listens for a connection to be made to this Connection and accepts it.

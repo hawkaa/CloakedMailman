@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Collections;
 
+import no.ntnu.fp.net.cl.ClException;
 import no.ntnu.fp.net.cl.KtnDatagram;
 import no.ntnu.fp.net.cl.KtnDatagram.Flag;
 import no.ntnu.fp.net.co.AbstractConnection;
@@ -74,11 +75,29 @@ public class CloakedConnection extends AbstractConnection {
      *             If there's an I/O error.
      * @throws java.net.SocketTimeoutException
      *             If timeout expires before connection is completed.
+     * @throws InvalidStateException 
+     * @throws ClException 
      * @see Connection#connect(InetAddress, int)
      */
     public void connect(InetAddress remoteAddress, int remotePort) throws IOException,
-            SocketTimeoutException {
+            SocketTimeoutException, InvalidStateException, ClException {
         /*throw new NotImplementedException();*/
+    	if(this.state != State.CLOSED)
+    	{
+				throw new InvalidStateException("This call requires the connection to be CLOSED");
+    	}
+    	this.state = State.SYN_SENT;
+    	KtnDatagram packet = constructInternalPacket(Flag.SYN);
+    	KtnDatagram ackReceive = sendDataPacketWithRetransmit(packet);
+    	if(ackReceive == null)
+    	{
+    		throw new SocketTimeoutException("Socket timed out");
+    	}
+    	KtnDatagram ackPacket = constructInternalPacket(Flag.ACK);
+    	simplySendPacket(ackPacket);
+    	this.state = State.ESTABLISHED;
+    	
+    	
     }
 
     /**
