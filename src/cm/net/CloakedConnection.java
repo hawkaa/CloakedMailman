@@ -100,7 +100,8 @@ public class CloakedConnection extends AbstractConnection {
     	
     	// Sender SYN
     	KtnDatagram packet = constructInternalPacket(Flag.SYN);
-    	KtnDatagram ackReceive = sendDataPacketWithRetransmit(packet);
+    	simplySendPacket(packet);
+    	KtnDatagram ackReceive = receiveAck();
     	this.state = State.SYN_SENT;
     	
     	// Får man ikke noe svar, har det oppstått en time out
