@@ -40,6 +40,9 @@ public class CloakedConnection extends AbstractConnection {
      * @param myPort
      *            - the local port to associate with this connection
      */
+    public CloakedConnection() {
+    	
+    }
     public CloakedConnection(int myPort) {
         /*throw new NotImplementedException();*/
     }
