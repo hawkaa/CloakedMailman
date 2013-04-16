@@ -3,6 +3,7 @@
  */
 package cm.net;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.InetAddress;
@@ -98,6 +99,11 @@ public class CloakedConnection extends AbstractConnection {
     		// Receive datagram
     		KtnDatagram dg = this.receivePacket(true);
     		
+    		// If datagram not set
+    		if (dg == null) {
+    			continue;
+    		}
+    		
     		// Check if syn. If not SYN, try again
     		if(dg.getFlag() != Flag.SYN) {
     			continue;
@@ -106,7 +112,7 @@ public class CloakedConnection extends AbstractConnection {
     	}
     	
     }
-
+	
     /**
      * Send a message from the application.
      * 
