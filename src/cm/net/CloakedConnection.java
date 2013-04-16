@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Collections;
 
 import no.ntnu.fp.net.cl.KtnDatagram;
+import no.ntnu.fp.net.cl.KtnDatagram.Flag;
 import no.ntnu.fp.net.co.AbstractConnection;
 import no.ntnu.fp.net.co.Connection;
 
@@ -93,11 +94,17 @@ public class CloakedConnection extends AbstractConnection {
     	if (this.state != State.CLOSED){
     		throw new InvalidStateException("This call requires the connection to be CLOSED");
     	}
+    	while (true) {
+    		// Receive datagram
+    		KtnDatagram dg = this.receivePacket(true);
+    		
+    		// Check if syn. If not SYN, try again
+    		if(dg.getFlag() != Flag.SYN) {
+    			continue;
+    		}
+    		System.out.println("Her");
+    	}
     	
-    	
-    	
-        /*throw new NotImplementedException();*/
-    	return null;
     }
 
     /**

@@ -201,7 +201,7 @@ public class ChatServer extends JFrame {
                     } catch (SocketTimeoutException e) {
 		      DBG("startServer(): Noe gikk galt, forsøk igjen.");
 		      e.printStackTrace();
-                    } catch (IOException e) {
+                    } catch (Exception e) {
 		      DBG("startServer(): Noe gikk galt, forsøk igjen.");
 		      e.printStackTrace();
                     }

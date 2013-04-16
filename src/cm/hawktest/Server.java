@@ -13,7 +13,7 @@ public class Server {
 	 * @throws IOException 
 	 * @throws SocketTimeoutException 
 	 */
-	public static void main(String[] args) throws SocketTimeoutException, IOException {
+	public static void main(String[] args) throws Exception {
 		Connection server = new CloakedConnection(4295);
 		Connection c = server.accept();
 		while(true) {

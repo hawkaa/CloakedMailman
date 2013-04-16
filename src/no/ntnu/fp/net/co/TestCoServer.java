@@ -57,7 +57,7 @@ public class TestCoServer {
       System.out.println("SERVER TEST FINISHED");
       Log.writeToLog("TEST SERVER FINISHED","TestServer");
     }
-    catch (IOException e){
+    catch (Exception e){
       e.printStackTrace();
     }
   }
