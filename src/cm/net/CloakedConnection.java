@@ -53,8 +53,10 @@ public class CloakedConnection extends AbstractConnection {
     	// Setting port
     	this.myPort = myPort;
     	
+    	this.myAddress = getIPv4Address();
     	
-    	System.out.println("Creating connection with port number " + this.myPort);
+    	
+    	System.out.println("Creating connection with port number " + this.myPort + " and sequence number " + this.nextSequenceNo);
     }
 
     private String getIPv4Address() {
@@ -118,6 +120,29 @@ public class CloakedConnection extends AbstractConnection {
     		System.out.println("Her");
     		
     		// Allright, we've received a SYN package.
+    		
+    		// Creating a new connection with random port number
+    		CloakedConnection con = new CloakedConnection();
+    		
+    		// Setting the connection state to SYN RCVD
+    		con.state = State.SYN_RCVD;
+    		
+    		// Setting connection parameters
+    		con.remoteAddress = dg.getSrc_addr();
+    		con.remotePort = dg.getSrc_port();
+    		
+    		// Send SYNACK to initiator
+    		con.sendAck(dg, true);
+    		
+    		// Awaiting ACK
+    		KtnDatagram ack = con.receiveAck();
+    		if(ack == null) {
+    			System.out.println("Connection ack timed out. Restarting.");
+    		}
+    		// Connection established
+    		con.state = State.ESTABLISHED;
+    		return con;
+    		
     	}
     	
     }
