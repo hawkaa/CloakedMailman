@@ -43,15 +43,18 @@ public class CloakedConnection extends AbstractConnection {
      *            - the local port to associate with this connection
      */
     public CloakedConnection() {
-    	/*
-    	 * Setting state to closed
-    	 */
-    	this.state = State.CLOSED;
+    	// Generating random port number
+    	this((int)(10000 + (Math.random() * 10000)));
+    	
     }
     public CloakedConnection(int myPort) {
-    	this();
+    	// Setting state to closed
+    	this.state = State.CLOSED;
     	// Setting port
     	this.myPort = myPort;
+    	
+    	
+    	System.out.println("Creating connection with port number " + this.myPort);
     }
 
     private String getIPv4Address() {
@@ -95,6 +98,8 @@ public class CloakedConnection extends AbstractConnection {
     	if (this.state != State.CLOSED){
     		throw new InvalidStateException("This call requires the connection to be CLOSED");
     	}
+    	
+    	// Set the state
     	this.state = State.LISTEN;
     	
     	while (true) {
@@ -111,6 +116,8 @@ public class CloakedConnection extends AbstractConnection {
     			continue;
     		}
     		System.out.println("Her");
+    		
+    		// Allright, we've received a SYN package.
     	}
     	
     }
