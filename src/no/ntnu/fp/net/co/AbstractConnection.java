@@ -30,7 +30,7 @@ public abstract class AbstractConnection implements Connection {
     /**
      * The possible states for a Connection.
      */
-    protected enum State {
+    public enum State {
         CLOSED, LISTEN, SYN_SENT, SYN_RCVD, ESTABLISHED, FIN_WAIT_1, FIN_WAIT_2, TIME_WAIT, CLOSE_WAIT, LAST_ACK
     }
 
@@ -188,6 +188,10 @@ public abstract class AbstractConnection implements Connection {
         packet.setSrc_port(myPort);
         packet.setFlag(flag);
         packet.setSeq_nr(nextSequenceNo++);
+        // Added this line
+        if(this.lastValidPacketReceived != null) {
+        	packet.setAck(this.lastValidPacketReceived.getSeq_nr());
+        }
         packet.setPayload(null);
 
         return packet;

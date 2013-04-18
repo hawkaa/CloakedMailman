@@ -1,5 +1,6 @@
 package cm.hawktest;
 
+import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
@@ -22,7 +23,12 @@ public class Server {
 		CloakedConnection server = new CloakedConnection(4295);
 		CloakedConnection c = server.accept();
 		while(true) {
-			Util.Herpaderp.d("Test", c.receive());
+			try {
+				Util.Herpaderp.d("Test", c.receive());
+			} catch (EOFException e) {
+				break;
+			}
+			
 		}
 		
 

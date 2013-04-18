@@ -31,8 +31,12 @@ public class Client {
 		CloakedConnection con = new CloakedConnection();
 		con.connect(InetAddress.getByName("localhost"), 4295);
 		//Util.Herpaderp.d("Test", "Sending petter er kul");
-		con.send("Petter er kul");
+		/*con.send("Petter er kul");
+		con.send("Petter er dust");*/
 		
+		for(int i = 1; i<=100; ++i) {
+			con.send(new Integer(i).toString());
+		}
 		con.close();
 		//Util.Herpaderp.d("Test", "Send success!");
 		/*String input;

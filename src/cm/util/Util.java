@@ -9,6 +9,9 @@ public class Util {
 	public static Log Herpaderp;
 	
 	public static String dumpDatagram(KtnDatagram dg) {
+		if(dg == null) {
+			return "[NO PACKET]";
+		}
 		String s = "[";
 		s += "Src: " + dg.getSrc_addr() + ":" + dg.getSrc_port() + ", ";
 		s += "Dest: " + dg.getDest_addr() + ":" + dg.getDest_port() + ", ";

@@ -7,20 +7,25 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.InetAddress;
+import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Collections;
+import java.util.Timer;
 
 import cm.util.Log;
 import cm.util.Util;
 
 import no.ntnu.fp.net.cl.ClException;
+import no.ntnu.fp.net.cl.ClSocket;
 import no.ntnu.fp.net.cl.KtnDatagram;
 import no.ntnu.fp.net.cl.KtnDatagram.Flag;
 import no.ntnu.fp.net.co.AbstractConnection;
 import no.ntnu.fp.net.co.Connection;
+import no.ntnu.fp.net.co.SendTimer;
+import no.ntnu.fp.net.co.AbstractConnection.State;
 
 /**
  * Implementation of the Connection-interface. <br>
@@ -105,11 +110,9 @@ public class CloakedConnection extends AbstractConnection {
     	// Sender SYN
     	KtnDatagram packet = constructInternalPacket(Flag.SYN);
     	Util.ServerClient.d("Connect", "Sending SYN: " + Util.dumpDatagram(packet));
-    	simplySendPacket(packet);
-    	Util.ServerClient.d("Connect", "Waiting for ACK");
-    	KtnDatagram ackReceive = receiveAck();
     	this.state = State.SYN_SENT;
-    	
+    	KtnDatagram ackReceive = sendWithRetransmit(packet);
+    	//simplySendPacket(packet);    	
     	// Får man ikke noe svar, har det oppstått en time out
     	if(ackReceive == null)
     	{
@@ -261,7 +264,42 @@ public class CloakedConnection extends AbstractConnection {
     	
     	while (true) {
     		// Receive datagram
-    		KtnDatagram dg = this.receivePacket(false);
+    		KtnDatagram dg = null;
+    		
+    		try {
+				dg = this.receivePacket(false);
+			} catch (EOFException e) {
+				// We have received a FIN package which we know is valid
+				Util.ServerClient.d("Receive", "FIN package received");
+				this.state = State.CLOSE_WAIT;
+				
+				// Recreate FIN package
+				this.lastValidPacketReceived.setFlag(Flag.FIN);
+				this.lastValidPacketReceived.setAck(this.lastValidPacketReceived.getAck() + 1);
+				
+				this.sendAck(this.lastValidPacketReceived, false);
+				
+				// Wating timeout to make sure the ACK has been received
+				try {
+					//Thread.sleep(TIMEOUT);
+				} catch (Exception e2) {
+					// TODO: handle exception
+				}
+				
+				
+				KtnDatagram fin = this.constructInternalPacket(Flag.FIN);
+				Util.ServerClient.d("Receive", "Sending FIN: " + Util.dumpDatagram(fin));
+				KtnDatagram ackFromOther = this.sendWithRetransmit(fin);
+				if(ackFromOther == null) {
+					Util.ServerClient.d("Receive", "Did not receive ACK for the FIN, closing nonetheless");
+				} else {
+					Util.ServerClient.d("Receive", "ACK received, closing connection: " + Util.dumpDatagram(ackFromOther));
+				}
+				this.state = State.CLOSED;
+				throw new EOFException();			
+				
+			}
+    		
     		
     		// If datagram not set
     		if (dg == null) {
@@ -281,6 +319,7 @@ public class CloakedConnection extends AbstractConnection {
     		Util.ServerClient.d("Receive", "Package is valid, returning payload \"" + (String)dg.getPayload() + "\" to callee. Sending ACK on package.");
     		// Package is valid, send ack on package
     		this.sendAck(dg, false);
+    		this.lastValidPacketReceived = dg;
     		return (String) dg.getPayload();
     		
     	}
@@ -292,22 +331,43 @@ public class CloakedConnection extends AbstractConnection {
      * @see Connection#close()
      */
     public void close() throws IOException {
+    	try {
+    		// Sleeping to make sure the thread is receiving
+			Thread.sleep(100);
+		} catch (Exception e) {
+		}
     	this.state = State.FIN_WAIT_1;
     	Util.ServerClient.d("Close", "Initiating close sequence");
     	
     	KtnDatagram dg = this.constructInternalPacket(Flag.FIN);
     	
-    	Util.ServerClient.d("Close", "Sending: " + Util.dumpDatagram(dg));
-    	this.sendDataPacketWithRetransmit(dg);
+    	Util.ServerClient.d("Close", "Sending simply: " + Util.dumpDatagram(dg));
+    	try {
+			this.simplySendPacket(dg);
+		} catch (ClException e) {
+			Util.ServerClient.d("Close", "Could not send: " + e.getMessage());
+			// The other connection is not listening, so why bother?
+			this.state = State.CLOSED;
+			return;
+		}
+    	
+    	KtnDatagram ack = this.receivePacket(true);
+    	
+    	if (ack == null) {
+    		throw new IOException("Did not get FIN ACK");
+    	}
+    	this.lastValidPacketReceived = ack;
+    	// Ack received
+    	Util.ServerClient.d("Close", "Received ACK: " + Util.dumpDatagram(ack));
+    	
     	this.state = State.FIN_WAIT_2;
     	
-    	KtnDatagram fin;
-    	while (true) {
-    		fin = this.receivePacket(false);
-    		if(fin != null) {
-    			break;
-    		}
+    	KtnDatagram fin = this.receiveAck();
+    	if (fin == null) {
+    		Util.ServerClient.d("Close", "Did not receive FIN.");
+    		throw new IOException("Did not receive FIN.");
     	}
+    	this.lastValidPacketReceived = fin;
     	
     	// Fin Received
     	Util.ServerClient.d("Close","Received FIN: " + Util.dumpDatagram(fin));
@@ -319,8 +379,29 @@ public class CloakedConnection extends AbstractConnection {
 		} catch (Exception e) {
 			
 		}
-    	
+    	Util.ServerClient.d("Close", "Connection finally closes after timeout");
     	this.state = State.CLOSED; 
+    }
+    
+    private KtnDatagram sendWithRetransmit(KtnDatagram dg) throws IOException {
+    	 /*
+         * Algorithm: 1 Start a timer used to resend the packet with a specified
+         * interval, and that immediately starts trying (sending the first
+         * packet as well as the retransmits). 2 Wait for the ACK using
+         * receiveAck(). 3 Cancel the timer. 4 Return the ACK-packet.
+         */
+
+        lastDataPacketSent = dg;
+
+        // Create a timer that sends the packet and retransmits every
+        // RETRANSMIT milliseconds until cancelled.
+        Timer timer = new Timer();
+        timer.scheduleAtFixedRate(new SendTimer(new ClSocket(), dg), 0, RETRANSMIT);
+
+        KtnDatagram ack = receiveAck();
+        timer.cancel();
+
+        return ack;
     }
 
     /**
