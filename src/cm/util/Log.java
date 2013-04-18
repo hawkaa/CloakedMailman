@@ -17,39 +17,40 @@ import java.util.Date;
  */
 public class Log
 {
-    private static File logFile;
-    private static BufferedWriter logWriter;
+    private File logFile;
+    private BufferedWriter logWriter;
+    private String instance;
     
-
-    public static void d(String tag, String content)
-    {
-        String debug = "[Debug " + tag + "]: " + content;
-        System.out.println(debug);
-        writeToFile(debug);
-    }
-
-    public static void e(String tag, String content)
-    {
-        String err = "[Error " + tag + "]: " + content;
-        System.err.println(err);
-        writeToFile(err);
-    }
-
-    public static void setLogFile(File file)
-    {
-        logFile = file;
-        try
+    public Log(File file, String instance) {
+    	this.logFile = file;
+    	this.instance = instance;
+    	try
         {
             logWriter = new BufferedWriter(new FileWriter(file, true));
         }
         catch(IOException e)
         {
-            Log.e("Log", "Error setting log file");
+            this.e("Log", "Error setting log file");
             return;
         }
     }
 
-    private static void writeToFile(String s)
+    public void d(String tag, String content)
+    {
+        String debug = "[" + instance + "] [Debug " + tag + "]: " + content;
+        System.out.println(debug);
+        this.writeToFile(debug);
+    }
+
+    public void e(String tag, String content)
+    {
+        String err = "[" + instance + "] [Error " + tag + "]: " + content;
+        System.err.println(err);
+        writeToFile(err);
+    }
+
+    
+    private void writeToFile(String s)
     {
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss aa");
         Date today = Calendar.getInstance().getTime();
@@ -71,7 +72,7 @@ public class Log
         }
     }
 
-    public static void close()
+    public void close()
     {
         try
         {
@@ -83,7 +84,7 @@ public class Log
         }
     }
 
-    public static boolean clearLogFile()
+    public boolean clearLogFile()
     {
         try
         {

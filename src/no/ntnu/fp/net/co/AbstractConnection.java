@@ -11,6 +11,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Timer;
 
+import cm.util.Util;
+
 import no.ntnu.fp.net.admin.Log;
 import no.ntnu.fp.net.cl.ClException;
 import no.ntnu.fp.net.cl.ClSocket;
@@ -141,8 +143,11 @@ public abstract class AbstractConnection implements Connection {
         packet.setSrc_port(myPort);
         packet.setFlag(Flag.NONE);
         packet.setSeq_nr(nextSequenceNo++);
+        // Added this line
+        if(this.lastValidPacketReceived != null) {
+        	packet.setAck(this.lastValidPacketReceived.getSeq_nr());
+        }
         packet.setPayload(payload);
-
         return packet;
     }
 
@@ -284,6 +289,8 @@ public abstract class AbstractConnection implements Connection {
     
         KtnDatagram ackToSend = constructInternalPacket(synAck ? Flag.SYN_ACK : Flag.ACK);
         ackToSend.setAck(packetToAck.getSeq_nr());
+        
+        cm.util.Util.ServerClient.d("SendAck", "Sending: " + Util.dumpDatagram(ackToSend));
     
         // Send the ack, trying at most `tries' times.
         Log.writeToLog(ackToSend, "Sending Ack: " + ackToSend.getAck(), "AbstractConnection");

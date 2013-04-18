@@ -12,6 +12,7 @@ import no.ntnu.fp.net.co.Connection;
 import cm.net.CloakedConnection;
 import cm.net.InvalidStateException;
 import cm.util.Log;
+import cm.util.Util;
 
 public class Client {
 
@@ -24,11 +25,16 @@ public class Client {
 	 * @throws InvalidStateException 
 	 */
 	public static void main(String[] args) throws SocketTimeoutException, UnknownHostException, IOException, InvalidStateException, ClException {
-		Log.setLogFile(new File("log/server_client.log"));
+		Util.ServerClient = new Log(new File("log/server_client.log"), "Client");
+		Util.Herpaderp = new Log(new File("log/herpaderp.log"), "Client");
 		
-		Connection con = new CloakedConnection();
+		CloakedConnection con = new CloakedConnection();
 		con.connect(InetAddress.getByName("localhost"), 4295);
+		//Util.Herpaderp.d("Test", "Sending petter er kul");
 		con.send("Petter er kul");
+		
+		con.close();
+		//Util.Herpaderp.d("Test", "Send success!");
 		/*String input;
 		Scanner sc = new Scanner(System.in);
 		while (true) {
