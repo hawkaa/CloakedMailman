@@ -36,6 +36,7 @@ public class Client {
 		
 		for(int i = 1; i<=100; ++i) {
 			con.send(new Integer(i).toString());
+		
 		}
 		con.close();
 		//Util.Herpaderp.d("Test", "Send success!");
