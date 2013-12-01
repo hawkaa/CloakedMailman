@@ -291,7 +291,10 @@ public class CloakedConnection extends AbstractConnection {
 				Util.ServerClient.d("Receive", "Sending FIN: " + Util.dumpDatagram(fin));
 				KtnDatagram ackFromOther = this.sendWithRetransmit(fin);
 				if(ackFromOther == null) {
-					Util.ServerClient.d("Receive", "Did not receive ACK for the FIN, closing nonetheless");
+					
+					Util.ServerClient.d("Receive", "Did not receive ACK for the FIN. Restablishing connection");
+					this.state = State.ESTABLISHED;
+					continue;
 				} else {
 					Util.ServerClient.d("Receive", "ACK received, closing connection: " + Util.dumpDatagram(ackFromOther));
 				}

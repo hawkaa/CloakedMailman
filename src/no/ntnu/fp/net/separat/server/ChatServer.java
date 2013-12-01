@@ -17,6 +17,7 @@ import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 
+import cm.net.CloakedConnection;
 import cm.net.InvalidStateException;
 
 import no.ntnu.fp.net.admin.Log;
@@ -33,7 +34,7 @@ import no.ntnu.fp.net.separat.client.ChatClient;
  */
 public class ChatServer extends JFrame {
 
-    public static boolean SIMPLE_CONNECTION = true;
+    public static boolean SIMPLE_CONNECTION = false;
 
     private Connection server;
 
@@ -178,7 +179,7 @@ public class ChatServer extends JFrame {
         if (SIMPLE_CONNECTION)
             server = new SimpleConnection(listenPort);
         else
-            server = new ConnectionImpl(listenPort);
+            server = new CloakedConnection(listenPort);
 
         Thread listener = new Thread() {
 
